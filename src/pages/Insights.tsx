@@ -1,8 +1,33 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { useInsights } from '../hooks/useInsights'
+import { useCategories } from '../hooks/useCategories'
+import NomineeLabel from '../components/NomineeLabel'
 
 export default function Insights() {
-  const { insights, loading, participantCount } = useInsights()
+  const { insights, loading, participantCount, lockedParticipants, allPredictions } = useInsights()
+  const { categoriesWithNominees: categories } = useCategories()
+
+  // Build a lookup: categoryId -> nomineeId -> list of participants who picked it
+  const breakdown = useMemo(() => {
+    const participantMap = new Map(lockedParticipants.map(p => [p.id, p]))
+    const result = new Map<string, Map<string, typeof lockedParticipants>>()
+
+    for (const pred of allPredictions) {
+      const participant = participantMap.get(pred.participant_id)
+      if (!participant) continue // skip unlocked participants
+
+      if (!result.has(pred.category_id)) {
+        result.set(pred.category_id, new Map())
+      }
+      const catMap = result.get(pred.category_id)!
+      if (!catMap.has(pred.nominee_id)) {
+        catMap.set(pred.nominee_id, [])
+      }
+      catMap.get(pred.nominee_id)!.push(participant)
+    }
+    return result
+  }, [allPredictions, lockedParticipants])
 
   if (loading) {
     return (
@@ -12,21 +37,67 @@ export default function Insights() {
     )
   }
 
+  const getInitials = (name: string) =>
+    name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+
   return (
     <div className="flex-1 flex flex-col">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+        className="mb-4"
       >
         <h2 className="font-serif text-2xl font-bold text-ivory mb-1">
-          The Room Before the Show
+          The Pre-Show
         </h2>
         <p className="text-ivory-dim text-sm">
           {participantCount} ballot{participantCount !== 1 ? 's' : ''} locked in
         </p>
       </motion.div>
 
+      {/* Participant Cards */}
+      {lockedParticipants.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6 -mx-5 px-5"
+        >
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {lockedParticipants.map((p, idx) => {
+              const initials = getInitials(p.display_name)
+              return (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 + idx * 0.1, type: 'spring', stiffness: 300 }}
+                  className="flex flex-col items-center gap-1.5 shrink-0"
+                >
+                  <div className="w-14 h-14 rounded-full border-2 border-gold/50 bg-gradient-to-br from-charcoal to-velvet flex items-center justify-center overflow-hidden shadow-lg shadow-gold/10">
+                    {p.photo_url ? (
+                      <img
+                        src={p.photo_url}
+                        alt={p.display_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="font-serif text-base font-bold text-gold">
+                        {initials}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-ivory-dim text-[11px] font-medium text-center leading-tight max-w-16 truncate">
+                    {p.display_name}
+                  </span>
+                </motion.div>
+              )
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Insight Stats */}
       {insights.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-ivory-dim text-sm text-center">
@@ -62,6 +133,85 @@ export default function Insights() {
             </motion.div>
           ))}
         </div>
+      )}
+
+      {/* Category-by-Category Breakdown */}
+      {categories.length > 0 && lockedParticipants.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8"
+        >
+          <h3 className="font-serif text-lg font-bold text-ivory mb-4 flex items-center gap-2">
+            <span className="text-gold">📋</span> How Everyone Voted
+          </h3>
+          <div className="space-y-4">
+            {categories.map(cat => {
+              const catVotes = breakdown.get(cat.id)
+              if (!catVotes) return null
+
+              return (
+                <div key={cat.id} className="glass-card p-4">
+                  {/* Category header */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-serif text-sm font-bold text-ivory">
+                      {cat.name}
+                    </h4>
+                    <span className="text-gold-dim text-xs font-medium">
+                      {cat.point_value} pts
+                    </span>
+                  </div>
+
+                  {/* Nominees with voters */}
+                  <div className="space-y-2">
+                    {cat.nominees.map(nom => {
+                      const voters = catVotes.get(nom.id) ?? []
+                      if (voters.length === 0) return null
+
+                      return (
+                        <div
+                          key={nom.id}
+                          className="flex items-center justify-between gap-2 py-1.5 border-t border-charcoal-light/50 first:border-t-0 first:pt-0"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <NomineeLabel
+                              label={nom.label}
+                              tags={cat.tags}
+                              isSelected={false}
+                            />
+                          </div>
+                          {/* Voter avatars */}
+                          <div className="flex -space-x-1.5 shrink-0">
+                            {voters.map(v => (
+                              <div
+                                key={v.id}
+                                className="w-7 h-7 rounded-full border-2 border-velvet bg-gradient-to-br from-charcoal to-velvet flex items-center justify-center"
+                                title={v.display_name}
+                              >
+                                {v.photo_url ? (
+                                  <img
+                                    src={v.photo_url}
+                                    alt={v.display_name}
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-[9px] font-bold text-gold">
+                                    {getInitials(v.display_name)}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </motion.div>
       )}
 
       {/* Waiting message */}

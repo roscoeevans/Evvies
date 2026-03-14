@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useParticipant } from './hooks/useParticipant'
 import { useSettings } from './hooks/useSettings'
 import { usePredictions } from './hooks/usePredictions'
+import { useCategories } from './hooks/useCategories'
 import Layout from './components/Layout'
 import ProfileSetup from './pages/ProfileSetup'
 import Ballot from './pages/Ballot'
@@ -17,6 +18,8 @@ function AppRoutes() {
   const { participant, loading: pLoading } = useParticipant()
   const { appPhase, loading: sLoading, isLocked } = useSettings()
   const { completedCount, loading: predLoading } = usePredictions(participant?.id ?? null)
+  const { categories } = useCategories()
+  const firstCategorySlug = categories.length > 0 ? categories[0].slug : 'best-documentary-short'
 
   if (pLoading || sLoading || predLoading) {
     return (
@@ -48,7 +51,7 @@ function AppRoutes() {
         appPhase === 'final' ? <Navigate to="/report" replace /> :
         appPhase === 'live' ? <Navigate to="/leaderboard" replace /> :
         (progress === 'submitted') ? <Navigate to="/insights" replace /> :
-        (progress === 'in_progress' || progress === 'ready_to_lock') ? <Navigate to="/ballot/best-picture" replace /> :
+        (progress === 'in_progress' || progress === 'ready_to_lock') ? <Navigate to={`/ballot/${firstCategorySlug}`} replace /> :
         <ProfileSetup />
       } />
 
