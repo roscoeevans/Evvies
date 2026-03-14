@@ -84,11 +84,15 @@ function AppRoutes() {
       {/* Leaderboard */}
       <Route path="/leaderboard" element={
         appPhase === 'final' ? <Navigate to="/report" replace /> :
-        <Leaderboard />
+        appPhase === 'live' ? <Leaderboard /> :
+        <Navigate to={getDefaultRoute()} replace />
       } />
 
       {/* After Party Report */}
-      <Route path="/report" element={<AfterParty />} />
+      <Route path="/report" element={
+        appPhase === 'final' ? <AfterParty /> :
+        <Navigate to={getDefaultRoute()} replace />
+      } />
 
       {/* Admin */}
       <Route path="/admin" element={<AdminControl />} />
