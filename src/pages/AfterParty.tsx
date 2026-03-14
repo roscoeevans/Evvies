@@ -7,7 +7,7 @@ import { useAllPredictions } from '../hooks/usePredictions'
 import { supabase } from '../lib/supabase'
 import { computeFunnyAwards } from '../lib/scoring'
 import NomineeLabel from '../components/NomineeLabel'
-import type { Participant, Nominee } from '../lib/types'
+import type { Participant } from '../lib/types'
 
 export default function AfterParty() {
   const { leaderboard, announcedCount, filmWins, nomineeMap } = useLeaderboard()

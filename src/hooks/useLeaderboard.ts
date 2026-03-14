@@ -176,7 +176,6 @@ export function useLeaderboard() {
 
   // Live insight stats
   const liveInsights = useMemo(() => {
-    const resultMap = new Map(results.map(r => [r.category_id, r]))
     const lockedParticipants = participants.filter(p => p.locked_at)
 
     if (results.length === 0 || lockedParticipants.length === 0) return null

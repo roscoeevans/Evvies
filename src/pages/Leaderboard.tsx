@@ -3,7 +3,6 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import { useParticipant } from '../hooks/useParticipant'
-import NomineeLabel from '../components/NomineeLabel'
 
 export default function Leaderboard() {
   const {
