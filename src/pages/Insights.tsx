@@ -1,13 +1,32 @@
 import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useInsights } from '../hooks/useInsights'
 import { useCategories } from '../hooks/useCategories'
+import { useParticipant } from '../hooks/useParticipant'
+import { supabase } from '../lib/supabase'
 import NomineeLabel from '../components/NomineeLabel'
 
 export default function Insights() {
   const { insights, loading, participantCount, lockedParticipants, allPredictions } = useInsights()
   const { categoriesWithNominees: categories } = useCategories()
+  const { participant } = useParticipant()
+  const navigate = useNavigate()
 
+  const isAdmin = participant?.is_admin ?? false
+  const lockedCount = lockedParticipants.length
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [starting, setStarting] = useState(false)
+
+  const handleStartShow = async () => {
+    setStarting(true)
+    await supabase
+      .from('settings')
+      .update({ value: JSON.stringify('live'), updated_at: new Date().toISOString() })
+      .eq('key', 'app_phase')
+    // The route guard will redirect to /leaderboard
+    navigate('/leaderboard')
+  }
   // Build a lookup: categoryId -> nomineeId -> list of participants who picked it
   const breakdown = useMemo(() => {
     const participantMap = new Map(lockedParticipants.map(p => [p.id, p]))
@@ -214,18 +233,80 @@ export default function Insights() {
         </motion.div>
       )}
 
-      {/* Waiting message */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="mt-auto pt-6 text-center"
-      >
-        <p className="text-ivory-dim/40 text-xs">
-          The show hasn't started yet. When it does,<br />
-          this screen will become the live leaderboard.
-        </p>
-      </motion.div>
+      {/* Footer — Admin Start Show / Non-admin waiting */}
+      {isAdmin ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-auto pt-6"
+        >
+          <div className="glass-card p-4 space-y-3">
+            <p className="text-ivory-dim text-xs uppercase tracking-wider font-semibold">
+              🎬 Host Controls
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-ivory text-sm">Ballots submitted</span>
+              <span className={`text-sm font-bold ${
+                lockedCount === participantCount && participantCount > 0
+                  ? 'text-green-400' : 'text-gold'
+              }`}>
+                {lockedCount} of {participantCount}
+                {lockedCount === participantCount && participantCount > 0 && ' ✓'}
+              </span>
+            </div>
+            {lockedCount < participantCount && (
+              <p className="text-crimson-light text-xs">
+                ⚠ {participantCount - lockedCount} {participantCount - lockedCount === 1 ? 'person hasn\'t' : 'people haven\'t'} submitted yet. Starting the show will lock everyone out.
+              </p>
+            )}
+
+            {!showConfirm ? (
+              <motion.button
+                onClick={() => setShowConfirm(true)}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-crimson-dim via-crimson to-crimson-dim text-ivory shadow-lg shadow-crimson/20 touch-target"
+                whileTap={{ scale: 0.97 }}
+              >
+                Start the Show 🎬
+              </motion.button>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-ivory text-sm text-center font-medium">
+                  Are you sure? No new ballots can be submitted after this.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowConfirm(false)}
+                    className="flex-1 py-3 rounded-xl text-sm font-medium bg-charcoal text-ivory-dim"
+                  >
+                    Cancel
+                  </button>
+                  <motion.button
+                    onClick={handleStartShow}
+                    disabled={starting}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-crimson-dim via-crimson to-crimson-dim text-ivory"
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {starting ? 'Starting...' : 'Confirm'}
+                  </motion.button>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-auto pt-6 text-center"
+        >
+          <p className="text-ivory-dim/40 text-xs">
+            The show hasn't started yet. When it does,<br />
+            this screen will become the live leaderboard.
+          </p>
+        </motion.div>
+      )}
     </div>
   )
 }
