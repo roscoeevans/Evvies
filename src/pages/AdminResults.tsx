@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { useCategories } from '../hooks/useCategories'
 import { useResults } from '../hooks/useResults'
 
@@ -8,6 +9,7 @@ export default function AdminResults() {
   const { results, setResult, announcedCount } = useResults()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const navigate = useNavigate()
   const resultMap = new Map(results.map(r => [r.category_id, r]))
   const selectedCategory = categoriesWithNominees.find(c => c.id === selectedCategoryId)
 
@@ -22,6 +24,12 @@ export default function AdminResults() {
   return (
     <div className="flex-1 flex flex-col">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+        <button
+          onClick={() => navigate('/leaderboard')}
+          className="text-gold-dim text-xs font-medium mb-2 flex items-center gap-1"
+        >
+          ← Back to Leaderboard
+        </button>
         <h2 className="font-serif text-2xl font-bold text-ivory mb-1">Enter Winners</h2>
         <p className="text-ivory-dim text-sm">{announcedCount} of {categoriesWithNominees.length} announced</p>
       </motion.div>

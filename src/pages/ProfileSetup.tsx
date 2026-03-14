@@ -10,6 +10,7 @@ export default function ProfileSetup() {
   const { categories } = useCategories()
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showRestore, setShowRestore] = useState(false)
   const [restoreName, setRestoreName] = useState('')
@@ -26,6 +27,7 @@ export default function ProfileSetup() {
       name.trim(),
       null,
       pin.trim() || null,
+      isAdmin,
     )
 
     if (participant) {
@@ -110,6 +112,17 @@ export default function ProfileSetup() {
             Use this to recover your ballot on another device
           </p>
         </div>
+
+        {/* Admin Toggle */}
+        <label className="flex items-center gap-2.5 cursor-pointer py-1">
+          <input
+            type="checkbox"
+            checked={isAdmin}
+            onChange={(e) => setIsAdmin(e.target.checked)}
+            className="w-4 h-4 rounded bg-charcoal border-charcoal-light accent-gold"
+          />
+          <span className="text-ivory-dim/40 text-xs">I'm the host</span>
+        </label>
 
         {/* Submit Button */}
         <motion.button

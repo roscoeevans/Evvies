@@ -44,7 +44,8 @@ export function useParticipant() {
   const createParticipant = useCallback(async (
     displayName: string,
     photoUrl?: string | null,
-    pin?: string | null
+    pin?: string | null,
+    isAdmin?: boolean
   ): Promise<Participant | null> => {
     const sessionToken = generateSessionToken()
 
@@ -55,7 +56,7 @@ export function useParticipant() {
         photo_url: photoUrl ?? null,
         pin: pin ?? null,
         session_token: sessionToken,
-        is_admin: false,
+        is_admin: isAdmin ?? false,
         ballot_completed_at: null,
         locked_at: null,
       })

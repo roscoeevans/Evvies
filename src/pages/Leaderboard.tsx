@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { useLeaderboard } from '../hooks/useLeaderboard'
+import { useParticipant } from '../hooks/useParticipant'
 import NomineeLabel from '../components/NomineeLabel'
 
 export default function Leaderboard() {
@@ -10,6 +12,9 @@ export default function Leaderboard() {
     participants, predictions, results, categoriesWithNominees, nomineeMap,
   } = useLeaderboard()
 
+  const { participant } = useParticipant()
+  const navigate = useNavigate()
+  const isAdmin = participant?.is_admin ?? false
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null)
 
   const streakMap = useMemo(
@@ -60,6 +65,14 @@ export default function Leaderboard() {
             {announcedCount} / {totalCategories}
           </span>
         </div>
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/admin/results')}
+            className="mt-2 w-full py-2.5 rounded-xl text-center font-semibold text-xs bg-gradient-to-r from-crimson-dim via-crimson to-crimson-dim text-ivory shadow-lg shadow-crimson/20 touch-target"
+          >
+            🎬 Log Winner →
+          </button>
+        )}
       </motion.div>
 
       {/* Just Announced Splash */}
