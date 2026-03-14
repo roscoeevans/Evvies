@@ -22,7 +22,6 @@ export default function Ballot({ participant }: BallotProps) {
   const {
     setPrediction,
     getPredictionForCategory,
-    saving,
     completedCount,
   } = usePredictions(participant.id)
 
@@ -169,19 +168,7 @@ export default function Ballot({ participant }: BallotProps) {
             })}
           </div>
 
-          {/* Autosave indicator */}
-          <AnimatePresence>
-            {saving && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center mt-3"
-              >
-                <span className="text-gold-dim text-xs">Saving...</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
         </motion.div>
       </AnimatePresence>
 
