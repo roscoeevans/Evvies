@@ -48,6 +48,7 @@ export interface Nominee {
   id: string
   category_id: string
   label: string
+  film: string | null
   sort_order: number
 }
 
