@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useCategories } from '../hooks/useCategories'
 import { usePredictions } from '../hooks/usePredictions'
 import { getTagColorClass, UI_GROUP_LABELS } from '../lib/scoring'
+import NomineeLabel from '../components/NomineeLabel'
 import type { Participant } from '../lib/types'
 
 interface BallotProps {
@@ -157,9 +158,11 @@ export default function Ballot({ participant }: BallotProps) {
                         </motion.svg>
                       )}
                     </div>
-                    <span className={`text-sm leading-snug ${isSelected ? 'text-gold-light font-medium' : 'text-ivory'}`}>
-                      {nominee.label}
-                    </span>
+                    <NomineeLabel
+                      label={nominee.label}
+                      tags={category.tags}
+                      isSelected={isSelected}
+                    />
                   </div>
                 </motion.button>
               )
