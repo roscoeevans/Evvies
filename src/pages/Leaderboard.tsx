@@ -111,12 +111,16 @@ export default function Leaderboard() {
                         return (
                           <div
                             key={pid}
-                            className="w-6 h-6 rounded-full border-2 border-charcoal bg-gradient-to-br from-charcoal to-velvet flex items-center justify-center"
+                            className="w-6 h-6 rounded-full border-2 border-charcoal bg-gradient-to-br from-charcoal to-velvet flex items-center justify-center overflow-hidden"
                             title={p.display_name}
                           >
-                            <span className="text-[8px] font-bold text-gold">
-                              {getInitials(p.display_name)}
-                            </span>
+                            {p.photo_url ? (
+                              <img src={p.photo_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[8px] font-bold text-gold">
+                                {getInitials(p.display_name)}
+                              </span>
+                            )}
                           </div>
                         )
                       })}
